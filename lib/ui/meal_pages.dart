@@ -27,7 +27,7 @@ class MealDetailPage extends StatelessWidget {
         return Column(children:[for(final image in imagesSnapshot.data!)
           Padding(padding:const EdgeInsets.symmetric(vertical:8),child:Image.file(File(image['absolute_path'] as String),height:220,fit:BoxFit.contain,errorBuilder:(_,__,___)=>const Text('사진 파일을 열 수 없습니다')))]);
       }),
-      for(final row in snapshot.data!)ListTile(title:Text(row['name'].toString()),subtitle:Text('${row['weight_g']??'?'} g · 출처: ${row['source']}'),trailing:Text('${row['calculated_kcal']??'?'} kcal'))]);
+      for(final row in snapshot.data!)ListTile(title:Text(row['name'].toString()),subtitle:Text('${row['weight_g']??'?'} g · 출처: ${row['source']}\n탄수화물·단백질·지방: 데이터 없음 (0g 아님)'),isThreeLine:true,trailing:Text(row['calculated_kcal']==null?'열량 미확인':'${row['calculated_kcal']} kcal'))]);
   }));
 }
 class StatsPage extends StatelessWidget {
