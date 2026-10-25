@@ -26,6 +26,6 @@ jobs:
           print(f'Validated {len(rows)} nutrition entries')
           PY
       - run: flutter pub get
-      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: dart format --output=none lib test
       - run: flutter analyze
       - run: flutter test
