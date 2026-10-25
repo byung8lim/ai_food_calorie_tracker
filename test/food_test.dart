@@ -1,0 +1,3 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:ai_food_calorie_tracker/domain/food.dart';
+void main(){test('음식별 kcal 계산',(){final f=Food(id:'a',name:'밥',category:'grain',weight:210,kcalPer100g:150);expect(f.calories,315);});test('중복 ID 거부',(){expect(()=>AnalysisValidator.parse('{"foods":[{"item_id":"1","name":"밥","category":"grain"},{"item_id":"1","name":"김치","category":"side"}]}'),throwsFormatException);});test('잘못된 bbox 거부',(){expect(()=>AnalysisValidator.parse('{"foods":[{"item_id":"1","name":"밥","category":"grain","bbox":{"x":0.9,"y":0,"width":0.5,"height":0.2}}]}'),throwsFormatException);});}
