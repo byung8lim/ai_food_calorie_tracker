@@ -21,7 +21,6 @@ class FoodSplitEditor extends StatefulWidget {
 }
 class _FoodSplitEditorState extends State<FoodSplitEditor> {
   double fraction = .5;
-  bool horizontal = false;
   final firstName = TextEditingController();
   final secondName = TextEditingController();
   final firstWeight = TextEditingController();
@@ -43,11 +42,7 @@ class _FoodSplitEditorState extends State<FoodSplitEditor> {
     }
     return Scaffold(appBar: AppBar(title: const Text('드래그하여 음식 영역 분리')),
       body: ListView(padding: const EdgeInsets.all(16), children: [
-        const Text('선택한 음식 박스 내부의 분할선을 드래그하세요.'),
-        SegmentedButton<bool>(segments: const [
-          ButtonSegment(value:false,label:Text('좌우 분할')),
-          ButtonSegment(value:true,label:Text('상하 분할')),
-        ],selected:{horizontal},onSelectionChanged:(value)=>setState(() {horizontal=value.first;fraction=.5;})),
+        const Text('선택한 음식 박스 내부의 세로선을 좌우로 끌어 분할하세요.'),
         LayoutBuilder(builder: (context, constraints) {
           final w = constraints.maxWidth, h = w * widget.rawSize.height / widget.rawSize.width;
           final x = box['x']! * w, y = box['y']! * h;
@@ -57,14 +52,14 @@ class _FoodSplitEditorState extends State<FoodSplitEditor> {
             Positioned(left: x, top: y, width: bw, height: bh,
               child: GestureDetector(behavior: HitTestBehavior.opaque,
                 onPanUpdate: (details) => setState(() =>
-                  fraction = (fraction + (horizontal ? details.delta.dy / bh : details.delta.dx / bw)).clamp(.1, .9)),
-                child: CustomPaint(painter: _SplitPainter(fraction,horizontal)))),
+                  fraction = (fraction + details.delta.dx / bw).clamp(.1, .9)),
+                child: CustomPaint(painter: _SplitPainter(fraction)))),
           ]));
         }),
-        TextField(controller: firstName, decoration: InputDecoration(labelText: horizontal?'위쪽 음식명':'왼쪽 음식명')),
+        TextField(controller: firstName, decoration: const InputDecoration(labelText: '왼쪽 음식명')),
         TextField(controller: firstWeight, keyboardType: TextInputType.number,
           decoration: const InputDecoration(labelText: '왼쪽 섭취량(g)')),
-        TextField(controller: secondName, decoration: InputDecoration(labelText: horizontal?'아래쪽 음식명':'오른쪽 음식명')),
+        TextField(controller: secondName, decoration: const InputDecoration(labelText: '오른쪽 음식명')),
         TextField(controller: secondWeight, keyboardType: TextInputType.number,
           decoration: const InputDecoration(labelText: '오른쪽 섭취량(g)')),
         const Text('두 항목은 별도로 영양 DB를 선택해야 합니다. 임의로 기존 열량을 복제하지 않습니다.'),
@@ -77,14 +72,11 @@ class _FoodSplitEditorState extends State<FoodSplitEditor> {
           }
           final left = <String, double>{
             'x': box['x']!, 'y': box['y']!,
-            'width': horizontal ? box['width']! : box['width']! * fraction,
-            'height': horizontal ? box['height']! * fraction : box['height']!,
+            'width': box['width']! * fraction, 'height': box['height']!,
           };
           final right = <String, double>{
-            'x': horizontal ? box['x']! : box['x']! + box['width']! * fraction,
-            'y': horizontal ? box['y']! + box['height']! * fraction : box['y']!,
-            'width': horizontal ? box['width']! : box['width']! * (1 - fraction),
-            'height': horizontal ? box['height']! * (1 - fraction) : box['height']!,
+            'x': box['x']! + box['width']! * fraction, 'y': box['y']!,
+            'width': box['width']! * (1 - fraction), 'height': box['height']!,
           };
           Navigator.pop(context, FoodSplitResult(firstName.text.trim(), secondName.text.trim(),
             a, b, left, right));
@@ -94,16 +86,12 @@ class _FoodSplitEditorState extends State<FoodSplitEditor> {
 }
 class _SplitPainter extends CustomPainter {
   final double fraction;
-  final bool horizontal;
-  const _SplitPainter(this.fraction,this.horizontal);
+  const _SplitPainter(this.fraction);
   @override void paint(Canvas canvas, Size size) {
     final border = Paint()..color = Colors.amber ..style = PaintingStyle.stroke ..strokeWidth = 3;
     canvas.drawRect(Offset.zero & size, border);
-    if (horizontal) {
-      canvas.drawLine(Offset(0,size.height*fraction),Offset(size.width,size.height*fraction),border);
-    } else {
-      canvas.drawLine(Offset(size.width * fraction, 0),Offset(size.width * fraction, size.height), border);
-    }
+    canvas.drawLine(Offset(size.width * fraction, 0),
+      Offset(size.width * fraction, size.height), border);
   }
-  @override bool shouldRepaint(_SplitPainter old) => old.fraction != fraction || old.horizontal != horizontal;
+  @override bool shouldRepaint(_SplitPainter old) => old.fraction != fraction;
 }
