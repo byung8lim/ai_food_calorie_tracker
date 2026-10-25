@@ -8,7 +8,7 @@ void main() {
   test('Official Korean nutrition asset is nonempty and traceable', () async {
     // Flutter unit tests do not install the app's PlatformAssetBundle.
     // Parse the exact bundled JSON file independently of platform channels.
-    final records = jsonDecode(await File('assets/nutrition/seed.json').readAsString()) as List;
+    final records = jsonDecode(utf8.decode(gzip.decode(await File('assets/nutrition/seed.json.gz').readAsBytes()))) as List;
     final catalog = NutritionCatalog(records.map((row) =>
       NutritionEntry.fromJson(Map<String, dynamic>.from(row as Map))).toList());
     expect(catalog.entries.length, greaterThan(10000));
