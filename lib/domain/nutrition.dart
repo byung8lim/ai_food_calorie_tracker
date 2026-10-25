@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/services.dart';
 
 class NutritionEntry {
@@ -24,7 +25,9 @@ class NutritionCatalog {
   final List<NutritionEntry> entries;
   const NutritionCatalog(this.entries);
   static Future<NutritionCatalog> load() async {
-    final data = jsonDecode(await rootBundle.loadString('assets/nutrition/seed.json')) as List;
+    final bundled = await rootBundle.load('assets/nutrition/seed.json.gz');
+    final compressed = bundled.buffer.asUint8List(bundled.offsetInBytes, bundled.lengthInBytes);
+    final data = jsonDecode(utf8.decode(gzip.decode(compressed))) as List;
     return NutritionCatalog(data.map((v) => NutritionEntry.fromJson(Map<String, dynamic>.from(v as Map))).toList());
   }
   static String normalize(String s) => s.toLowerCase().replaceAll(RegExp(r'[^가-힣a-z0-9]'), '');
