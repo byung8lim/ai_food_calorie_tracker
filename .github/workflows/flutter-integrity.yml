@@ -1,0 +1,31 @@
+name: Flutter source and nutrition integrity
+on:
+  push:
+  pull_request:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Require real nutrition catalog
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, sys
+          path = pathlib.Path('assets/nutrition/seed.json')
+          if not path.is_file():
+              sys.exit('Missing official nutrition catalog: run tools/restore_nutrition.py with release ZIP and commit assets/nutrition/seed.json')
+          rows = json.loads(path.read_text(encoding='utf-8'))
+          if not isinstance(rows, list) or len(rows) <= 10000:
+              sys.exit('Nutrition catalog is incomplete')
+          for row in rows:
+              if row.get('unit') != '100g' or not row.get('source_id') or not row.get('source'):
+                  sys.exit('Invalid nutrition data provenance or unit')
+          print(f'Validated {len(rows)} nutrition entries')
+          PY
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: flutter analyze
+      - run: flutter test
