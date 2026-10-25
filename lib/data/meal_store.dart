@@ -72,7 +72,7 @@ class MealStore {
     try {
       await connection.executor.runInsert('INSERT INTO meals (id,consumed_at,meal_type,total_kcal) VALUES (?,?,?,?)',[id,date,mealType,AnalysisValidator.total(foods)]);
       for(final food in foods){
-        await connection.executor.runInsert('INSERT INTO food_items (id,meal_id,name,category,weight_g,kcal_per_100g,calculated_kcal,source,confidence,bbox_json,needs_review,nutrition_source_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',[food.id,id,food.name,food.category,food.weight,food.kcalPer100g,food.calories,food.source,food.confidence,food.bbox==null?null:jsonEncode(food.bbox),food.needsReview?1:0,food.source.startsWith('PUBLIC_DB:')?food.source.substring(10):null]);
+        await connection.executor.runInsert('INSERT INTO food_items (id,meal_id,name,category,weight_g,kcal_per_100g,calculated_kcal,source,confidence,bbox_json,needs_review,nutrition_source_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',['$id:${food.id}',id,food.name,food.category,food.weight,food.kcalPer100g,food.calories,food.source,food.confidence,food.bbox==null?null:jsonEncode(food.bbox),food.needsReview?1:0,food.source.startsWith('PUBLIC_DB:')?food.source.substring(10):null]);
       }
       for (var i = 0; i < stored.length; i++) {
         final photo = stored[i];
