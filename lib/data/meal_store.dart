@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
@@ -45,8 +46,25 @@ class MealStore {
     if (version < 3) {
       await connection.executor.runCustom('PRAGMA user_version = 3');
     }
+    await _recoverOrphanImageDirectories(dir);
     _opened = true;
   }
+  /// Reconcile image directories left by an interrupted write or deletion.
+  /// Only delete directories with no corresponding committed meal record.
+  Future<void> _recoverOrphanImageDirectories(Directory docs) async {
+    final root = Directory(p.join(docs.path, 'meal_images'));
+    if (!await root.exists()) return;
+    final rows = await connection.executor.runSelect('SELECT id FROM meals', []);
+    final valid = rows.map((r) => r['id'].toString()).toSet();
+    await for (final entity in root.list(followLinks: false)) {
+      if (entity is! Directory) continue;
+      final mealId = p.basename(entity.path);
+      if (!valid.contains(mealId)) {
+        await entity.delete(recursive: true);
+      }
+    }
+  }
+
   Future<void> save(String id,String mealType,List<Food> foods,{String? rawAnalysis,String model='gemma4:cloud',DateTime? consumedAt,List<Uint8List> images = const []}) async {
     await open();
     if(foods.isEmpty)throw ArgumentError('식사에 음식이 없습니다');
