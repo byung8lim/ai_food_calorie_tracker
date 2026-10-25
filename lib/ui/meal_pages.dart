@@ -18,14 +18,16 @@ class MealDetailPage extends StatelessWidget {
   final MealStore store;
   final String id;
   const MealDetailPage({super.key,required this.store,required this.id});
-  @override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:const Text('식사 상세')),body:FutureBuilder<List<dynamic>>(future:Future.wait<dynamic>([store.items(id),store.images(id)]),builder:(context,snapshot){
+  @override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:const Text('식사 상세')),body:FutureBuilder<List<Map<String,dynamic>>>(future:store.items(id),builder:(context,snapshot){
     if(snapshot.hasError)return Center(child:Text('조회 실패: ${snapshot.error}'));
     if(!snapshot.hasData)return const Center(child:CircularProgressIndicator());
-    final items = snapshot.data![0] as List<Map<String,dynamic>>;
-    final photos = snapshot.data![1] as List<File>;
     return ListView(children:[
-      for(final photo in photos) Padding(padding:const EdgeInsets.all(8),child:Image.file(photo,height:220,fit:BoxFit.contain)),
-      for(final row in items)ListTile(title:Text(row['name'].toString()),subtitle:Text('${row['weight_g']??'?'} g · 출처: ${row['source']}'),trailing:Text('${row['calculated_kcal']??'?'} kcal'))]);
+      FutureBuilder<List<Map<String,dynamic>>>(future:store.images(id),builder:(context,imagesSnapshot) {
+        if (!imagesSnapshot.hasData) return const SizedBox.shrink();
+        return Column(children:[for(final image in imagesSnapshot.data!)
+          Padding(padding:const EdgeInsets.symmetric(vertical:8),child:Image.file(File(image['absolute_path'] as String),height:220,fit:BoxFit.contain,errorBuilder:(_,__,___)=>const Text('사진 파일을 열 수 없습니다')))]);
+      }),
+      for(final row in snapshot.data!)ListTile(title:Text(row['name'].toString()),subtitle:Text('${row['weight_g']??'?'} g · 출처: ${row['source']}'),trailing:Text('${row['calculated_kcal']??'?'} kcal'))]);
   }));
 }
 class StatsPage extends StatelessWidget {
