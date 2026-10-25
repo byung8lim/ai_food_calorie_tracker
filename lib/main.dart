@@ -243,8 +243,7 @@ class _CapturePageState extends ConsumerState<CapturePage> {
       return;
     }
     try {
-      await ref.read(storeProvider).save(const Uuid().v4(), mealType, foods,
-        images: photos);
+      await ref.read(storeProvider).save(const Uuid().v4(), mealType, foods, images: photos);
       if (mounted) setState(() => status = '저장 완료');
     } catch (e) { if (mounted) setState(() => status = '저장 실패: $e'); }
   }
