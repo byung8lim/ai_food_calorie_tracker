@@ -13,11 +13,11 @@ jobs:
       - name: Require real nutrition catalog
         run: |
           python3 - <<'PY'
-          import json, pathlib, sys
-          path = pathlib.Path('assets/nutrition/seed.json')
+          import gzip, json, pathlib, sys
+          path = pathlib.Path('assets/nutrition/seed.json.gz')
           if not path.is_file():
-              sys.exit('Missing official nutrition catalog: run tools/restore_nutrition.py with release ZIP and commit assets/nutrition/seed.json')
-          rows = json.loads(path.read_text(encoding='utf-8'))
+              sys.exit('Missing official compressed nutrition catalog: assets/nutrition/seed.json.gz')
+          rows = json.loads(gzip.decompress(path.read_bytes()).decode('utf-8'))
           if not isinstance(rows, list) or len(rows) <= 10000:
               sys.exit('Nutrition catalog is incomplete')
           for row in rows:
